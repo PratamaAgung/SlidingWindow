@@ -39,6 +39,14 @@ class SendFrame{
 			send[8] = this->checksum;
 			return send;
 		}
+
+		int getFrameNumber(){
+			return 9;
+		}
+
+		int getSeqNumber(){
+			return seqNumber;
+		}
 };
 
 #endif
