@@ -1,4 +1,5 @@
 #include "sendframe.h"
+#include "frameack.h"
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netinet/in.h>
@@ -13,8 +14,15 @@ struct sockaddr_in serverAddr;
 struct sockaddr_storage serverStorage;
 socklen_t addr_size;
 int usedSocket;
+
+int bufferSize;
 SendFrame* buffer;
+
+int windowsize;
 int lengthFile;
+int lowerWindow;
+int upperWindow;
+bool sent[5];
 
 
 const std::string currentDateTime() {
@@ -59,8 +67,10 @@ void fillBuffer(string fileName){
 void sendFile(){
 	int i = 0;
 	while(i < lengthFile){
-		sendMessageFrame(usedSocket, buffer[i]);
-		i++;
+		if(!sent[i - lowerWindow]){
+			sendMessageFrame(usedSocket, buffer[i]);
+		}
+		i = (i+1 - lowerWindow)%windowsize + lowerWindow;
 	}
 }
 
@@ -70,18 +80,32 @@ void createSocket(char* IP, int portNum){
 	cout << currentDateTime() << "Open socket to " << IP << ":" << portNum << endl;
 }
 
+void receiveACK(){
+	unsigned char* msg;
+	recvfrom(usedSocket,msg,7,0,(struct sockaddr *)&serverStorage, &addr_size);
+	FrameAck ack(msg);
+}
 
 int main(int argc, char* argv[]){
 	string fileName = argv[1];
 	char* IP = argv[4];
 	int portNum = atoi(argv[5]);
-	int windowsize = atoi(argv[2]);
-	int bufferSize = atoi(argv[3]);
+	windowsize = atoi(argv[2]);
+	bufferSize = atoi(argv[3]);
 
+	//init
+	lowerWindow = 0;
+	upperWindow = windowsize - 1;
 	buffer = new SendFrame[bufferSize];
+	for(int i = 0; i < 5; i++){
+		sent[i] = false;
+	}
+
+	//read file
 	cout << currentDateTime() << "Reading from file " << fileName << endl;
 	fillBuffer(fileName);
 
+	//create socket and send file
 	createSocket(IP, portNum);
 	addr_size = sizeof serverAddr;
 	sendFile();

@@ -12,8 +12,17 @@ using namespace std;
 struct sockaddr_in serverAddr;
 struct sockaddr_storage serverStorage;
 socklen_t addr_size;
-
 int udpSocket;
+
+const std::string currentDateTime() {
+    time_t now = time(0);
+    struct tm  tstruct;
+    char buf[80];
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "[%Y-%m-%d %X] ", &tstruct);
+
+    return buf;
+}
 
 void configureSetting(int portNum) {
 	serverAddr.sin_family = AF_INET;
@@ -26,7 +35,7 @@ void sendACK(int seqNumber, int adWindowSize) {
 	FrameAck frameack(seqNumber, adWindowSize);
 	int msgLength = frameack.getFrameNumber();
 	sendto(udpSocket, frameack.toBytes(), 6, 0, (struct sockaddr*) &serverAddr, addr_size);
-	cout << "Frame number " << frameack.getNextSeqNumber() <<" sent" << endl; 
+	cout << currentDateTime() << "Frame number " << frameack.getNextSeqNumber() <<" sent" << endl; 
 }
 
 int main(int argc, char* argv[]){
@@ -53,15 +62,10 @@ int main(int argc, char* argv[]){
 	int check;
 
 	while(1) {
-		cout << "wait " << i << endl;
-
 		check = recvfrom(udpSocket,msg,9,0,(struct sockaddr *)&serverStorage, &addr_size);
 		
 		recvMesg[i] = SendFrame(msg);
-
-		cout << "Sequence Number : " << recvMesg[i].getSeqNumber() << endl;
-		cout << "Data : " << recvMesg[i].getData() << endl;
-
+		cout << currentDateTime() <<"Sequence Number : " << recvMesg[i].getSeqNumber() << "Data : " << recvMesg[i].getData() << endl;
 		i++;
 	}
 
