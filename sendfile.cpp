@@ -16,6 +16,17 @@ int usedSocket;
 SendFrame* buffer;
 int lengthFile;
 
+
+const std::string currentDateTime() {
+    time_t now = time(0);
+    struct tm  tstruct;
+    char buf[80];
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "[%Y-%m-%d %X] ", &tstruct);
+
+    return buf;
+}
+
 void configureSetting(char* IP, int portNum) {
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(portNum);
@@ -26,7 +37,7 @@ void configureSetting(char* IP, int portNum) {
 void sendMessageFrame(int usedSocket, SendFrame frame){
 	int msgLength = frame.getFrameNumber();
 	sendto(usedSocket, frame.toBytes(), 9, 0, (struct sockaddr*) &serverAddr, addr_size);
-	cout << "Frame number " << frame.getSeqNumber() <<" sent" << endl; 
+	cout << currentDateTime() << "Frame number " << frame.getSeqNumber() <<" sent" << endl; 
 }
 
 void fillBuffer(string fileName){
@@ -53,6 +64,13 @@ void sendFile(){
 	}
 }
 
+void createSocket(char* IP, int portNum){
+	usedSocket = socket(PF_INET, SOCK_DGRAM, 0);
+	configureSetting(IP, portNum);
+	cout << currentDateTime() << "Open socket to " << IP << ":" << portNum << endl;
+}
+
+
 int main(int argc, char* argv[]){
 	string fileName = argv[1];
 	char* IP = argv[4];
@@ -61,14 +79,10 @@ int main(int argc, char* argv[]){
 	int bufferSize = atoi(argv[3]);
 
 	buffer = new SendFrame[bufferSize];
-	cout << "Reading from file " << fileName << endl;
+	cout << currentDateTime() << "Reading from file " << fileName << endl;
 	fillBuffer(fileName);
 
-	//Create  UDP Socket
-	usedSocket = socket(PF_INET, SOCK_DGRAM, 0);
-	configureSetting(IP, portNum);
-	cout << "Open socket to " << IP << ":" << portNum << endl;
-
+	createSocket(IP, portNum);
 	addr_size = sizeof serverAddr;
 	sendFile();
 	
