@@ -70,10 +70,13 @@ void fillBuffer(string fileName){
 void sendFile(){
 	int i = 0;
 	while(i < lengthFile){
+		// mtx.lock();
 		if(!sent[i - lowerWindow]){
 			sendMessageFrame(usedSocket, buffer[i]);
+			sent[i - lowerWindow] = true;
 		}
 		i = (i+1 - lowerWindow)%windowsize + lowerWindow;
+		// mtx.unlock();
 	}
 }
 
@@ -87,13 +90,19 @@ void receiveACK(){
 	unsigned char* msg;
 	while(1){
 		recvfrom(usedSocket,msg,7,0,(struct sockaddr *)&serverStorage, &addr_size);
+		// cout << "receive" << endl;
 		if(msg){
 			FrameAck ack(msg);
 			unsigned int nextSeq =  ack.getNextSeqNumber();
 			cout << currentDateTime() << "Received ACK to" << nextSeq << endl;
 			mtx.lock();
-			upperWindow += nextSeq + lowerWindow;
-			lowerWindow = nextSeq;
+			if(nextSeq > lowerWindow){
+				upperWindow += nextSeq - lowerWindow;
+				lowerWindow = nextSeq;
+				for(int i = 4; i >= 5 - (nextSeq - lowerWindow); i--){
+					sent[i] = false;
+				}
+			}
 			mtx.unlock();
 		}
 	}
