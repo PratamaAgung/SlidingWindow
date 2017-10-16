@@ -9,10 +9,13 @@
 using namespace std;
 
 // GLOBAL
-struct sockaddr_in serverAddr;
+struct sockaddr_in serverAddr, clientAddr;
 struct sockaddr_storage serverStorage;
-socklen_t addr_size;
+socklen_t addr_size, client_addr_size;
 int udpSocket;
+
+// message (array of sendframe)
+// buffer (array of sendframe)
 
 const std::string currentDateTime() {
     time_t now = time(0);
@@ -32,10 +35,17 @@ void configureSetting(int portNum) {
 } 
 
 void sendACK(int seqNumber, int adWindowSize) {
-	FrameAck frameack(seqNumber, adWindowSize);
+	FrameAck frameack(seqNumber + 1, adWindowSize);
 	int msgLength = frameack.getFrameNumber();
-	sendto(udpSocket, frameack.toBytes(), 6, 0, (struct sockaddr*) &serverAddr, addr_size);
+	sendto(udpSocket,frameack.toBytes(),7,0,(struct sockaddr *)&serverStorage,addr_size);
 	cout << currentDateTime() << "Frame number " << frameack.getNextSeqNumber() <<" sent" << endl; 
+}
+
+void createSocket(int port){
+	udpSocket = socket(PF_INET, SOCK_DGRAM, 0);   
+    configureSetting(port);
+	int hasilBind = bind(udpSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
+	cout << hasilBind << endl;
 }
 
 int main(int argc, char* argv[]){
@@ -44,19 +54,17 @@ int main(int argc, char* argv[]){
 	int WINDOW_SIZE = 5;
 	addr_size = sizeof serverStorage;
 
-	int portNum = 9876;
+	int portNum = atoi(argv[1]);
 	unsigned char msg[100];
 	
 	// Membuat UDP socket
-    udpSocket = socket(PF_INET, SOCK_DGRAM, 0);   
-    configureSetting(portNum);
-	int hasilBind = bind(udpSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
-	cout << hasilBind << endl;
-
-	// ----------------------------------------------------
+	createSocket(portNum);
 
 	SendFrame * recvMesg;
 	recvMesg = new SendFrame[buffersize];
+
+	// int * recvWindow;
+	// recvWindow = new int[WINDOW_SIZE];
 
 	int i = 0;
 	int check;
@@ -66,6 +74,7 @@ int main(int argc, char* argv[]){
 		
 		recvMesg[i] = SendFrame(msg);
 		cout << currentDateTime() <<"Sequence Number : " << recvMesg[i].getSeqNumber() << "Data : " << recvMesg[i].getData() << endl;
+		sendACK(recvMesg[i].getSeqNumber(), WINDOW_SIZE);
 		i++;
 	}
 
