@@ -4,7 +4,6 @@
 #include <bits/stdc++.h>
 
 #define ACK 0x6
-#define defValue 0;
 
 class FrameAck {
 private:
@@ -15,9 +14,9 @@ private:
 public:
     //constructor
     FrameAck() {
-        nextSeqNumber = defValue;
-        adWindowSize = defValue;
-        checksum = defValue;
+        nextSeqNumber = 0;
+        adWindowSize = 0;
+        checksum = 0;
     };
 
     FrameAck(unsigned int nextSeqNumber, unsigned char adWindowSize) {
@@ -25,6 +24,12 @@ public:
         this->adWindowSize = adWindowSize;
         this->checksum = 0;
     };
+
+    FrameAck(unsigned char* msg){
+        this->nextSeqNumber = (msg[1] << 24) + (msg[2] << 18) + (msg[3] << 8) + msg[4];
+        this->adWindowSize = msg[5];
+        this->checksum = msg[6]; 
+    }
 
     unsigned char * toBytes() {
         unsigned char* send = new unsigned char[7];
@@ -39,13 +44,14 @@ public:
     }
 
     //setter
-    void setNextSeqNumber(unsigned int nextSeqNumber) { this->nextSeqNumber = nextSeqNumber}
-    void setAdWindowSize(unsigned int adWindowSize) { this->adWindowSize = adWindowSize}
+    void setNextSeqNumber(unsigned int nextSeqNumber) { this->nextSeqNumber = nextSeqNumber;}
+    void setAdWindowSize(unsigned int adWindowSize) { this->adWindowSize = adWindowSize;}
 
     //getter
-    unsigned int getNextSeqNumb() { return nextSeqNumber; }
+    unsigned int getNextSeqNumber() { return nextSeqNumber; }
     unsigned int getAdWindowSize() { return adWindowSize; }
     unsigned char getCheckSum() { return checksum; }
+    unsigned int getFrameNumber(){ return  7;}
 };
 
 #endif

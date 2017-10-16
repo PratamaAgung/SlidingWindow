@@ -26,6 +26,12 @@ class SendFrame{
 			this->checksum = 0;
 		}
 
+		SendFrame(unsigned char* msg){
+			this->seqNumber = (msg[1] << 24) + (msg[2] << 18) + (msg[3] << 8) + msg[4];
+			this->data = msg[6];
+			this->checksum = msg[9];
+		}
+
 		unsigned char* toBytes(){
 			unsigned char* send = new unsigned char[9];
 			send[0] = SOH;
@@ -46,6 +52,14 @@ class SendFrame{
 
 		int getSeqNumber(){
 			return seqNumber;
+		}
+
+		unsigned char getData(){
+			return data;
+		}
+
+		unsigned char getChecksum(){
+			return checksum;
 		}
 };
 

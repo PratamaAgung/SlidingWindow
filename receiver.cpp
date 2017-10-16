@@ -36,7 +36,7 @@ int main(int argc, char* argv[]){
 	addr_size = sizeof serverStorage;
 
 	int portNum = 9876;
-	char msg[100];
+	unsigned char msg[100];
 	
 	// Membuat UDP socket
     udpSocket = socket(PF_INET, SOCK_DGRAM, 0);   
@@ -57,8 +57,7 @@ int main(int argc, char* argv[]){
 
 		check = recvfrom(udpSocket,msg,9,0,(struct sockaddr *)&serverStorage, &addr_size);
 		
-		unsigned int seq = (msg[1]<<24) + (msg[2]<<16) + (msg[3] << 8) + msg[4];
-		recvMesg[i] = SendFrame(msg[6], seq);
+		recvMesg[i] = SendFrame(msg);
 
 		cout << "Sequence Number : " << recvMesg[i].getSeqNumber() << endl;
 		cout << "Data : " << recvMesg[i].getData() << endl;
