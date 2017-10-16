@@ -6,6 +6,8 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <fstream>
+#include <thread>
+#include <mutex>
 
 using namespace std;
 
@@ -14,6 +16,7 @@ struct sockaddr_in serverAddr;
 struct sockaddr_storage serverStorage;
 socklen_t addr_size;
 int usedSocket;
+mutex mtx;
 
 int bufferSize;
 SendFrame* buffer;
@@ -82,8 +85,18 @@ void createSocket(char* IP, int portNum){
 
 void receiveACK(){
 	unsigned char* msg;
-	recvfrom(usedSocket,msg,7,0,(struct sockaddr *)&serverStorage, &addr_size);
-	FrameAck ack(msg);
+	while(1){
+		recvfrom(usedSocket,msg,7,0,(struct sockaddr *)&serverStorage, &addr_size);
+		if(msg){
+			FrameAck ack(msg);
+			unsigned int nextSeq =  ack.getNextSeqNumber();
+			cout << currentDateTime() << "Received ACK to" << nextSeq << endl;
+			mtx.lock();
+			upperWindow += nextSeq + lowerWindow;
+			lowerWindow = nextSeq;
+			mtx.unlock();
+		}
+	}
 }
 
 int main(int argc, char* argv[]){
@@ -108,7 +121,13 @@ int main(int argc, char* argv[]){
 	//create socket and send file
 	createSocket(IP, portNum);
 	addr_size = sizeof serverAddr;
-	sendFile();
+	
+	//communicate with receiver
+	thread send(sendFile);
+	thread receive(receiveACK);
+
+	send.join();
+	receive.join();
 	
 	return 0;
 }
