@@ -116,7 +116,9 @@ void receiveACK(){
 			unsigned int nextSeq =  ack.getNextSeqNumber();
 			cout << currentDateTime() << "Received ACK to " << nextSeq << endl;
 			mtx.lock();
-			windowsize = ack.getAdWindowSize();
+			if (windowsize > ack.getAdWindowSize()){
+				windowsize = ack.getAdWindowSize();
+			}
 			if(nextSeq > lowerWindow && nextSeq <= upperWindow + 1){
 				for(int i = windowsize-1; (windowsize - (nextSeq - lowerWindow == 0))?(i != -1):(i >= windowsize - (nextSeq - lowerWindow)); i--){
 					status[i].setStatus(0);
@@ -125,6 +127,7 @@ void receiveACK(){
 				upperWindow = (lowerWindow + windowsize - 1< lengthFile)?(lowerWindow + windowsize - 1):(lengthFile-1);
 				if(nextSeq >= lengthFile){
 					finish = true;
+					sendMessageFrame(usedSocket, SendFrame(0, -1));
 				} else if (nextSeq%bufferSize == 0){
 					sendToBuffer();
 				}
