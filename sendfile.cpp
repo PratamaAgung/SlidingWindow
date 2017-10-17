@@ -10,6 +10,8 @@
 #include <thread>
 #include <mutex>
 
+#define TIME_OUT 500
+
 using namespace std;
 
 /* GLOBAL */
@@ -27,7 +29,7 @@ int lengthFile;
 int lowerWindow;
 int upperWindow;
 WindowStatus* status;
-
+bool finish;
 
 const std::string currentDateTime() {
     time_t now = time(0);
@@ -55,7 +57,7 @@ void sendMessageFrame(int usedSocket, SendFrame frame){
 void fillBuffer(string fileName){
 	ifstream fin(fileName);
 	int seqNumber = 0;
-	while(1){
+	while(true){
 		char c;
 		fin >> noskipws >> c;
 		if(!fin.eof()){
@@ -70,7 +72,7 @@ void fillBuffer(string fileName){
 
 void sendFile(){
 	int i = 0;
-	while(i < lengthFile){
+	while(!finish){
 		if(status[i - lowerWindow].getStatus() == 0){
 			sendMessageFrame(usedSocket, buffer[i]);
 			mtx.lock();
@@ -78,6 +80,9 @@ void sendFile(){
 			mtx.unlock();
 		}
 		i = (i+1 - lowerWindow)%windowsize + lowerWindow;
+		if(i == lengthFile){
+			finish = true;
+		}
 	}
 }
 
@@ -89,7 +94,7 @@ void createSocket(char* IP, int portNum){
 
 void receiveACK(){
 	unsigned char* msg;
-	while(1){
+	while(!finish){
 		recvfrom(usedSocket,msg,7,0,(struct sockaddr *)&serverStorage, &addr_size);
 		if(msg){
 			FrameAck ack(msg);
@@ -105,17 +110,20 @@ void receiveACK(){
 				mtx.unlock();
 			}
 			cout << upperWindow << lowerWindow << nextSeq << endl;
-			// for(int i = 0; i < 5; i++){
-			// 	cout << sent[i];
-			// }
-			// cout << endl;
 		}
 	}
 }
 
 void timeOutManager(){
-	while(1){
-		
+	while(!finish){
+		for(int i = 0; i < 5; i++){
+			if(float(clock() - status[i].getTime())/(CLOCKS_PER_SEC/1000) > TIME_OUT){
+				mtx.lock();
+				status[i].setStatus(0);
+				status[i].setTime(clock());
+				mtx.unlock();
+			}
+		}
 	}
 }
 
@@ -146,9 +154,11 @@ int main(int argc, char* argv[]){
 	//communicate with receiver
 	thread send(sendFile);
 	thread receive(receiveACK);
+	thread timeout(timeOutManager);
 
 	send.join();
 	receive.join();
+	timeout.join();
 	
 	return 0;
 }
