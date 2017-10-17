@@ -56,32 +56,19 @@ void sendMessageFrame(int usedSocket, SendFrame frame){
 }
 
 void sendToBuffer() {
-	// mtx.lock();
-	// cout << "sendToBuffer" << endl;
 	int dataLength = bufferData.size();
-	// cout << dataLength << endl;
 	if(dataLength < bufferSize) {
 		for(int i=0; i<dataLength; i++) {
 			buffer[i] = bufferData.front();
 			bufferData.erase(bufferData.begin());
 		}
-		// cout << "if" << endl;
 	}
 	else {
 		for(int i=0; i<bufferSize; i++) {
 			buffer[i] = bufferData.front();
-			// cout << bufferData.front().getSeqNumber() << endl;
 			bufferData.erase(bufferData.begin());
 		}
-		// cout << "else" << endl;
 	}
-	// lengthFile = dataLength;
-
-	// for(int k=0; k<bufferSize; k++){
-	// 	cout << buffer[k].getSeqNumber() << endl;
-	// }
-
-	// mtx.unlock();
 }
 
 void fillBuffer(string fileName){
@@ -91,7 +78,6 @@ void fillBuffer(string fileName){
 		char c;
 		fin >> noskipws >> c;
 		if(!fin.eof()){
-			// buffer[seqNumber] = SendFrame(c, seqNumber);
 			bufferData.push_back(SendFrame(c, seqNumber));
 		} else {
 			break;
@@ -99,10 +85,6 @@ void fillBuffer(string fileName){
 		seqNumber++;
 	}
 	lengthFile = seqNumber;
-	// for (int i=0; i<lengthFile; i++){
-	// 	cout << bufferData.front().getData() << endl;
-	// 	// bufferData.erase(bufferData.begin());
-	// }
 }
 
 void sendFile(){
@@ -140,26 +122,11 @@ void receiveACK(){
 				}
 				lowerWindow = (nextSeq < lengthFile)?(nextSeq):(lengthFile-1);
 				upperWindow = (lowerWindow + windowsize - 1< lengthFile)?(lowerWindow + windowsize - 1):(lengthFile-1);
-				// cout << nextSeq << " :: " << lengthFile << endl;
 				if(nextSeq >= lengthFile){
 					finish = true;
 				} else if (nextSeq%bufferSize == 0){
 					sendToBuffer();
 				}
-				// else{
-				// 	// for(int k=0; k<bufferSize; k++){
-				// 	// 	cout << nextSeq << " :: " << buffer[k].getSeqNumber()+1 << endl;
-				// 	// }
-				// 	// cout << (buffer[bufferSize-1].getSeqNumber()+1) << endl;
-				// 	if(nextSeq == (buffer[bufferSize-1].getSeqNumber()+1)){
-				// 		sendToBuffer();
-						
-				// 		// lowerWindow = nextSeq -1 ;
-				// 		// nextSeq++;
-				// 		// upperWindow = lowerWindow + windowsize - 1;
-				// 		// nextSeq+=2;=2
-				// 	}
-				// }
 			}
 			mtx.unlock();
 		}
