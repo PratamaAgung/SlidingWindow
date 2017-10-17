@@ -43,6 +43,9 @@ public:
         return send;
     }
 
+    //isError
+    bool isError() {return true;}
+
     //setter
     void setNextSeqNumber(unsigned int nextSeqNumber) { this->nextSeqNumber = nextSeqNumber;}
     void setAdWindowSize(unsigned int adWindowSize) { this->adWindowSize = adWindowSize;}

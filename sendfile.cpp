@@ -87,6 +87,7 @@ void receiveACK(){
 	unsigned char* msg;
 	while(1){
 		recvfrom(usedSocket,msg,7,0,(struct sockaddr *)&serverStorage, &addr_size);
+		// bitset<> ;
 		if(msg){
 			FrameAck ack(msg);
 			unsigned int nextSeq =  ack.getNextSeqNumber();

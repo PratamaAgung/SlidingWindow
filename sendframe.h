@@ -46,6 +46,10 @@ class SendFrame{
 			return send;
 		}
 
+		//isError
+		bool isError() {return true;}
+
+		//getter
 		int getFrameNumber(){
 			return 9;
 		}
