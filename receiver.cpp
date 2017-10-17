@@ -13,8 +13,8 @@ struct sockaddr_in serverAddr, clientAddr;
 struct sockaddr_storage serverStorage;
 socklen_t addr_size, client_addr_size;
 int udpSocket;
-int buffersize;
-int WINDOW_SIZE;
+int buffersize = 100;
+int WINDOW_SIZE = 5;
 
 // message (array of sendframe)
 vector<SendFrame> recvMsg;
@@ -32,6 +32,9 @@ void geserArray(bool* arrayBool,int len, int geser);
 void setAllFalse(bool* arrayBool, int len);
 bool isAllFalse(bool* arrayBool, int len);
 int searchConsecutiveTrue(bool* arrayBool, int len);
+
+// Iterator Buffer
+int iBuff = 0;
 
 const std::string currentDateTime() {
     time_t now = time(0);
@@ -65,10 +68,12 @@ void createSocket(int port){
 }
 
 void processMsg(){
+	// if(iBuff == buffersize){
+	//	 
+	// }
 
 }
 
-int i = 0;
 void waitForMsg(){
 	unsigned char msg[10];
 	
@@ -92,35 +97,38 @@ void waitForMsg(){
 				geserArray(recvWindow, WINDOW_SIZE, newLower);
 				sendACK(lowerWindow-1, WINDOW_SIZE);
 			}
-
-			bufferMsg[i] = SendFrame(msg);			
+			bufferMsg[iBuff] = SendFrame(msg);			
 		}else if(tempSeq > lowerWindow){
 			if(tempSeq < lowerWindow + WINDOW_SIZE){
 				if(lowerWindow == 0){
-					recvWindow[tempSeq - lowerWindow] = true;
+					if(!recvWindow[tempSeq - lowerWindow]){
+						recvWindow[tempSeq - lowerWindow] = true;
+						bufferMsg[iBuff] = SendFrame(msg);
+					}
 				}else{
-					recvWindow[tempSeq - lowerWindow] = true;
+					if(!recvWindow[tempSeq - lowerWindow]){
+						recvWindow[tempSeq - lowerWindow] = true;
+						bufferMsg[iBuff] = SendFrame(msg);
+					}
 					sendACK(lowerWindow-1, WINDOW_SIZE);
 				}
-				bufferMsg[i] = SendFrame(msg);
 			}
 		}else{ // SeqNumber < lowerWindow
 			sendACK(lowerWindow-1, WINDOW_SIZE);
 		}
-		// sendACK(bufferMsg[i].getSeqNumber(), WINDOW_SIZE);
-		i++;
+		iBuff++;
 	}
 }
 
 int main(int argc, char* argv[]){
 
-	if(argc != 2){
+	if(argc < 2){
 		cout << "Port number" << endl;
 		return 0;	
 	}
 
 	buffersize = 100;
-	WINDOW_SIZE = 5;
+	WINDOW_SIZE = atoi(argv[2]);
 	addr_size = sizeof serverStorage;
 
 	//init
