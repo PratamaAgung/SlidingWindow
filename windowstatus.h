@@ -5,7 +5,7 @@
 
 class WindowStatus{
 	private:
-		char status; /*0 not_sent, 1 wait, 2 sent*/
+		int status; /*0 not_sent, 1 wait, 2 sent*/
 		clock_t time;
 	public:
 		WindowStatus(){
@@ -13,7 +13,7 @@ class WindowStatus{
 			time = clock();
 		}
 
-		char getStatus(){
+		int getStatus(){
 			return status;
 		}
 
@@ -21,7 +21,7 @@ class WindowStatus{
 			return time;
 		}
 
-		void setStatus(char status){
+		void setStatus(int status){
 			this->status = status;
 		}
 
