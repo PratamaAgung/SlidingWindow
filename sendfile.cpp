@@ -130,14 +130,12 @@ void receiveACK(){
 		recvfrom(usedSocket,msg,7,0,(struct sockaddr *)&serverStorage, &addr_size);
 		if(msg){
 			FrameAck ack(msg);
-			int nextSeq =  ack.getNextSeqNumber();
+			unsigned int nextSeq =  ack.getNextSeqNumber();
 			cout << currentDateTime() << "Received ACK to " << nextSeq << endl;
 			mtx.lock();
 			windowsize = ack.getAdWindowSize();
-			// cout << nextSeq << " :: " << lowerWindow << " :: " << upperWindow+1 << endl;
 			if(nextSeq > lowerWindow && nextSeq <= upperWindow + 1){
-				// cout << "check" << endl;
-				for(int i = 4; i >= 5 - (nextSeq - lowerWindow); i--){
+				for(int i = windowsize-1; (windowsize - (nextSeq - lowerWindow == 0))?(i != -1):(i >= windowsize - (nextSeq - lowerWindow)); i--){
 					status[i].setStatus(0);
 				}
 				lowerWindow = (nextSeq < lengthFile)?(nextSeq):(lengthFile-1);
