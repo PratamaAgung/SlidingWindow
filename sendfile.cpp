@@ -10,7 +10,7 @@
 #include <thread>
 #include <mutex>
 
-#define TIME_OUT 500
+#define TIME_OUT 2000
 
 using namespace std;
 
@@ -73,16 +73,13 @@ void fillBuffer(string fileName){
 void sendFile(){
 	int i = 0;
 	while(!finish){
+		mtx.lock();
 		if(status[i - lowerWindow].getStatus() == 0){
 			sendMessageFrame(usedSocket, buffer[i]);
-			mtx.lock();
 			status[i - lowerWindow].setStatus(1);
-			mtx.unlock();
 		}
-		i = (i+1 - lowerWindow)%windowsize + lowerWindow;
-		if(i == lengthFile){
-			finish = true;
-		}
+		i = ((i+1 - lowerWindow)%windowsize + lowerWindow < lengthFile)?((i+1 - lowerWindow)%windowsize + lowerWindow):(lowerWindow);
+		mtx.unlock();
 	}
 }
 
@@ -100,30 +97,33 @@ void receiveACK(){
 			FrameAck ack(msg);
 			unsigned int nextSeq =  ack.getNextSeqNumber();
 			cout << currentDateTime() << "Received ACK to " << nextSeq << endl;
-			if(nextSeq > lowerWindow && nextSeq <= upperWindow){
-				mtx.lock();
+			mtx.lock();
+			windowsize = ack.getAdWindowSize();
+			if(nextSeq > lowerWindow && nextSeq <= upperWindow + 1){
 				for(int i = 4; i >= 5 - (nextSeq - lowerWindow); i--){
 					status[i].setStatus(0);
 				}
-				lowerWindow = nextSeq;
-				upperWindow = lowerWindow + windowsize;
-				mtx.unlock();
+				lowerWindow = (nextSeq < lengthFile)?(nextSeq):(lengthFile-1);
+				upperWindow = (lowerWindow + windowsize - 1< lengthFile)?(lowerWindow + windowsize - 1):(lengthFile-1);
+				if(nextSeq >= lengthFile){
+					finish = true;
+				}
 			}
-			cout << upperWindow << lowerWindow << nextSeq << endl;
+			mtx.unlock();
 		}
 	}
 }
 
 void timeOutManager(){
 	while(!finish){
+		mtx.lock();
 		for(int i = 0; i < 5; i++){
 			if(float(clock() - status[i].getTime())/(CLOCKS_PER_SEC/1000) > TIME_OUT){
-				mtx.lock();
 				status[i].setStatus(0);
 				status[i].setTime(clock());
-				mtx.unlock();
 			}
 		}
+		mtx.unlock();
 	}
 }
 
