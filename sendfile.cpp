@@ -1,5 +1,6 @@
 #include "sendframe.h"
 #include "frameack.h"
+#include "windowstatus.h"
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netinet/in.h>
@@ -25,7 +26,7 @@ int windowsize;
 int lengthFile;
 int lowerWindow;
 int upperWindow;
-bool sent[5];
+WindowStatus* status;
 
 
 const std::string currentDateTime() {
@@ -70,13 +71,13 @@ void fillBuffer(string fileName){
 void sendFile(){
 	int i = 0;
 	while(i < lengthFile){
-		// mtx.lock();
-		if(!sent[i - lowerWindow]){
+		if(status[i - lowerWindow].getStatus() == 0){
 			sendMessageFrame(usedSocket, buffer[i]);
-			sent[i - lowerWindow] = true;
+			mtx.lock();
+			status[i - lowerWindow].setStatus(1);
+			mtx.unlock();
 		}
 		i = (i+1 - lowerWindow)%windowsize + lowerWindow;
-		// mtx.unlock();
 	}
 }
 
@@ -93,17 +94,28 @@ void receiveACK(){
 		if(msg){
 			FrameAck ack(msg);
 			unsigned int nextSeq =  ack.getNextSeqNumber();
-			cout << currentDateTime() << "Received ACK to" << nextSeq << endl;
-			mtx.lock();
-			if(nextSeq > lowerWindow){
-				upperWindow += nextSeq - lowerWindow;
-				lowerWindow = nextSeq;
+			cout << currentDateTime() << "Received ACK to " << nextSeq << endl;
+			if(nextSeq > lowerWindow && nextSeq <= upperWindow){
+				mtx.lock();
 				for(int i = 4; i >= 5 - (nextSeq - lowerWindow); i--){
-					sent[i] = false;
+					status[i].setStatus(0);
 				}
+				lowerWindow = nextSeq;
+				upperWindow = lowerWindow + windowsize;
+				mtx.unlock();
 			}
-			mtx.unlock();
+			cout << upperWindow << lowerWindow << nextSeq << endl;
+			// for(int i = 0; i < 5; i++){
+			// 	cout << sent[i];
+			// }
+			// cout << endl;
 		}
+	}
+}
+
+void timeOutManager(){
+	while(1){
+		
 	}
 }
 
@@ -118,8 +130,9 @@ int main(int argc, char* argv[]){
 	lowerWindow = 0;
 	upperWindow = windowsize - 1;
 	buffer = new SendFrame[bufferSize];
-	for(int i = 0; i < 5; i++){
-		sent[i] = false;
+	status = new WindowStatus[windowsize];
+	for(int i = 0; i < windowsize; i++){
+		status[i] = WindowStatus();
 	}
 
 	//read file
