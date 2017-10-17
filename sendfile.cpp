@@ -91,9 +91,10 @@ void sendFile(){
 	int i = 0;
 	while(!finish){
 		mtx.lock();
-		if(status[i - lowerWindow].getStatus() == 0){
-			sendMessageFrame(usedSocket, buffer[i%bufferSize]);
+		if(i >= lowerWindow && (i-lowerWindow) < windowsize && status[i - lowerWindow].getStatus() == 0){
+			sendMessageFrame(usedSocket, buffer[i]);
 			status[i - lowerWindow].setStatus(1);
+			status[i - lowerWindow].setTime(clock());
 		}
 		i = ((i+1 - lowerWindow)%windowsize + lowerWindow < lengthFile)?((i+1 - lowerWindow)%windowsize + lowerWindow):(lowerWindow);
 		mtx.unlock();
@@ -136,10 +137,10 @@ void receiveACK(){
 void timeOutManager(){
 	while(!finish){
 		mtx.lock();
-		for(int i = 0; i < 5; i++){
+		for(int i = 0; i < windowsize; i++){
 			if(float(clock() - status[i].getTime())/(CLOCKS_PER_SEC/1000) > TIME_OUT){
 				status[i].setStatus(0);
-				status[i].setTime(clock());
+				// status[i].setTime(clock());
 			}
 		}
 		mtx.unlock();
