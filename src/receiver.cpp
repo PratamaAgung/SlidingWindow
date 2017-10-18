@@ -5,6 +5,9 @@
 #include <arpa/inet.h>
 #include "sendframe.h"
 #include "frameack.h"
+#include <fstream>
+#include <thread>
+#include <mutex>
 
 using namespace std;
 
@@ -15,9 +18,14 @@ socklen_t addr_size, client_addr_size;
 int udpSocket;
 int buffersize = 100;
 int WINDOW_SIZE = 5;
+mutex mtx;
+string filename;
+bool finish = false;
 
 // message (array of sendframe)
-vector<SendFrame> recvMsg;
+// vector<SendFrame> recvMsg;
+auto cmp = [](SendFrame& lhs, SendFrame& rhs) { return lhs.getSeqNumber() > rhs.getSeqNumber();};
+std::priority_queue<SendFrame, std::vector<SendFrame>, decltype(cmp)> recvMsg(cmp);
 
 // buffer (array of sendframe)
 SendFrame * bufferMsg;
@@ -67,67 +75,103 @@ void createSocket(int port){
 	cout << hasilBind << endl;
 }
 
-void processMsg(){
-	// if(iBuff == buffersize){
-	//	 
-	// }
+void printRecvMsg(){
+	ofstream myfile;
+	myfile.open (filename);
+	while(!recvMsg.empty()){
+		SendFrame temp = recvMsg.top();
+		recvMsg.pop();
+		cout << temp.getData();
+		myfile << temp.getData();
+	}
+	cout << endl;
+	myfile.close();
+}
 
+void moveFromBuffer(){
+	mtx.lock();
+	for(int i = 0; i < iBuff; i++){
+		recvMsg.push(bufferMsg[i]);
+	}
+	iBuff = 0;
+	mtx.unlock();
+}
+
+void processMsg(){
+	while(!finish){
+		if(iBuff == buffersize){
+			cout << "Kosongin buffer" << endl;
+			moveFromBuffer();
+		}
+	}
 }
 
 void waitForMsg(){
 	unsigned char msg[10];
 	
-	while(1) {
+	while(!finish) {
 		recvfrom(udpSocket,msg,9,0,(struct sockaddr *)&serverStorage, &addr_size);
 		SendFrame tempFrame(msg); 
-
-		// cout << "lower window : " << lowerWindow << endl;
-		cout << currentDateTime() <<"Sequence Number : " << tempFrame.getSeqNumber() << " - Data : " << tempFrame.getData() << endl;
-
 		int tempSeq = tempFrame.getSeqNumber() ;
-		if(tempSeq == lowerWindow){
-			if(isAllFalse(recvWindow, WINDOW_SIZE)){
-				sendACK(lowerWindow, WINDOW_SIZE);
-				lowerWindow++;
-				upperWindow++;				
-			}else{
-				recvWindow[tempSeq-lowerWindow] = true;
-				int newLower = searchConsecutiveTrue(recvWindow, WINDOW_SIZE);
-				lowerWindow += newLower;
-				geserArray(recvWindow, WINDOW_SIZE, newLower);
-				sendACK(lowerWindow-1, WINDOW_SIZE);
-			}
-			bufferMsg[iBuff] = SendFrame(msg);			
-		}else if(tempSeq > lowerWindow){
-			if(tempSeq < lowerWindow + WINDOW_SIZE){
-				if(lowerWindow == 0){
-					if(!recvWindow[tempSeq - lowerWindow]){
-						recvWindow[tempSeq - lowerWindow] = true;
-						bufferMsg[iBuff] = SendFrame(msg);
-					}
+		cout << "seq number -> " << tempSeq << endl; 
+
+		if(tempFrame.getData() == (unsigned char) 0 /*&& tempFrame.getSeqNumber() == 50135039*/){
+			sendACK(lowerWindow-1,0);
+			finish = true;
+		}else{
+			// cout << "lower window : " << lowerWindow << endl;
+			cout << currentDateTime() <<"Sequence Number : " << tempFrame.getSeqNumber() << " - Data : " << tempFrame.getData() << endl;
+
+			if(tempSeq == lowerWindow){
+				if(isAllFalse(recvWindow, WINDOW_SIZE)){
+					sendACK(lowerWindow, WINDOW_SIZE);
+					lowerWindow++;
+					upperWindow++;				
 				}else{
-					if(!recvWindow[tempSeq - lowerWindow]){
-						recvWindow[tempSeq - lowerWindow] = true;
-						bufferMsg[iBuff] = SendFrame(msg);
-					}
+					recvWindow[tempSeq-lowerWindow] = true;
+					int newLower = searchConsecutiveTrue(recvWindow, WINDOW_SIZE);
+					lowerWindow += newLower;
+					geserArray(recvWindow, WINDOW_SIZE, newLower);
 					sendACK(lowerWindow-1, WINDOW_SIZE);
 				}
+				bufferMsg[iBuff] = SendFrame(msg);	
+				iBuff++;		
+			}else if(tempSeq > lowerWindow){
+				if(tempSeq < lowerWindow + WINDOW_SIZE){
+					if(lowerWindow == 0){
+						if(!recvWindow[tempSeq - lowerWindow]){
+							recvWindow[tempSeq - lowerWindow] = true;
+							bufferMsg[iBuff] = SendFrame(msg);
+							iBuff++;
+						}
+					}else{
+						if(!recvWindow[tempSeq - lowerWindow]){
+							recvWindow[tempSeq - lowerWindow] = true;
+							bufferMsg[iBuff] = SendFrame(msg);
+							iBuff++;
+						}
+						sendACK(lowerWindow-1, WINDOW_SIZE);
+					}
+				}else{
+					sendACK(lowerWindow-1, WINDOW_SIZE);
+				}
+			}else{ // SeqNumber < lowerWindow
+				sendACK(lowerWindow-1, WINDOW_SIZE);
 			}
-		}else{ // SeqNumber < lowerWindow
-			sendACK(lowerWindow-1, WINDOW_SIZE);
 		}
-		iBuff++;
 	}
 }
 
 int main(int argc, char* argv[]){
 
-	if(argc < 2){
-		cout << "Port number" << endl;
+	if(argc < 5){
+		cout << "./recvfile​ ​<filename>​ ​<windowsize>​ ​<buffersize>​ <port>" << endl;
 		return 0;	
 	}
 
-	buffersize = 100;
+	finish = false;
+	filename = argv[1];
+	buffersize = atoi(argv[3]);
 	WINDOW_SIZE = atoi(argv[2]);
 	addr_size = sizeof serverStorage;
 
@@ -138,7 +182,7 @@ int main(int argc, char* argv[]){
 	setAllFalse(recvWindow, WINDOW_SIZE);
 
 	// Set Port
-	int portNum = atoi(argv[1]);
+	int portNum = atoi(argv[4]);
 	
 	// Membuat UDP socket
 	createSocket(portNum);
@@ -148,8 +192,13 @@ int main(int argc, char* argv[]){
 
 	//communicate with receiver
 	thread receiveMsg(waitForMsg);
-
+	thread procMsg(processMsg);
+	
+	procMsg.join();	
 	receiveMsg.join();
+
+	moveFromBuffer();
+	printRecvMsg();
 
 	close(udpSocket);
 	cout << "exit" << endl;

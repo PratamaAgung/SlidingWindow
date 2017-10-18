@@ -30,7 +30,7 @@ int lengthFile;
 int lowerWindow;
 int upperWindow;
 WindowStatus* status;
-bool finish;
+bool done, finish;
 
 const std::string currentDateTime() {
     time_t now = time(0);
@@ -116,15 +116,26 @@ void receiveACK(){
 			unsigned int nextSeq =  ack.getNextSeqNumber();
 			cout << currentDateTime() << "Received ACK to " << nextSeq << endl;
 			mtx.lock();
-			windowsize = ack.getAdWindowSize();
+			if(ack.getAdWindowSize() > 0){
+				windowsize = ack.getAdWindowSize();	
+			}
 			if(nextSeq > lowerWindow && nextSeq <= upperWindow + 1){
 				for(int i = windowsize-1; (windowsize - (nextSeq - lowerWindow == 0))?(i != -1):(i >= windowsize - (nextSeq - lowerWindow)); i--){
 					status[i].setStatus(0);
 				}
 				lowerWindow = (nextSeq < lengthFile)?(nextSeq):(lengthFile-1);
 				upperWindow = (lowerWindow + windowsize - 1< lengthFile)?(lowerWindow + windowsize - 1):(lengthFile-1);
+				cout << nextSeq << ' ' << ack.getAdWindowSize() << endl;
 				if(nextSeq >= lengthFile){
-					finish = true;
+					if(!done){
+						buffer[(lengthFile - 1)%bufferSize] = SendFrame(0,0);
+						status[((lengthFile - 1)%bufferSize)%windowsize].setStatus(0);
+						status[((lengthFile - 1)%bufferSize)%windowsize].setTime(clock());
+						done = true;
+					} else if (ack.getAdWindowSize() == 0){
+						finish = true;
+					}
+					// sendto(usedSocket, SendFrame(0,0).toBytes(), 9, 0, (struct sockaddr*) &serverAddr, addr_size);
 				} else if (nextSeq%bufferSize == 0){
 					sendToBuffer();
 				}
@@ -164,7 +175,7 @@ int main(int argc, char* argv[]){
 	}
 	// bufferDone = false;
 	finish = false;
-
+	done = false;
 	//read file
 	cout << currentDateTime() << "Reading from file " << fileName << endl;
 	fillBuffer(fileName);

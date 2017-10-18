@@ -1,11 +1,11 @@
 all : build
 
-build: sendfile.cpp receiver.cpp
-	g++ sendfile.cpp -o bin/sendfile -std=c++11 -lpthread
-	g++ receiver.cpp -o bin/receiver -std=c++11 -lpthread
+build: src/sendfile.cpp src/receiver.cpp
+	g++ src/sendfile.cpp -o sendfile -std=c++11 -lpthread
+	g++ src/receiver.cpp -o recvfile -std=c++11 -lpthread
 
 run-sendfile:
-	./bin/sendfile message.txt 5 100 127.0.0.1 9876
+	./sendfile data/message.txt 5 100 127.0.0.1 9876
 
 run-receiver:
-	./bin/receiver 9876 5
+	./recvfile data/out.txt 5 100 9876
