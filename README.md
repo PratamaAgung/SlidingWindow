@@ -24,11 +24,11 @@ Fungsi-fungsi yang terlibat dalam proses transimsi data penggunakan flow control
 - `sendToBuffer()` berfungsi untuk memindahkan data dalam vektor ke dalam buffer
 - `sendFile()` berfungsi untuk mengirimkan frame-frame yang berada pada buffer
 - `receiveACK()` berfungsi untuk mengelola ack yang masuk pada sender
-- `timeOutManager()` 
-- `sendACK()`
-- `processMsg()`
-- `waitForMsg()`
-- `printRecvMsg()`
+- `timeOutManager()` berfungsi untuk mengelola waktu timeout pengiriman frame dan penerimaan ack
+- `sendACK()` berfungsi untuk mengelola pengiriman ack ke sender
+- `processMsg()` berfungsi untuk mengelola message yang masuk dan memindahkannya dari buffer
+- `waitForMsg()` berfungsi untuk mengelola message yang dikirimkan oleh sender dan dapat mengangani error dan juga pengiriman ack
+- `printRecvMsg()` berfungsi untuk mencetak message yang didapat dan menuliskan ke dalam file external
 - 
 ### Pembagian Tugas
 | Nama | NIM | Tugas  | 
@@ -39,12 +39,15 @@ Fungsi-fungsi yang terlibat dalam proses transimsi data penggunakan flow control
 
 ### Jawaban Pertanyaan
 - Apa yang terjadi jika advertised window yang dikirim bernilai 0? Apa cara untuk menangani hal tersebut?
-    Jika advertised window bernilai 0 maka pada buffer receiver akan selalu penuh dan tidak terjadi pertukaran data.??
+    Advertised Window adalah jumlah data yang masih dapat ditampung receiver ke dalam buffer. Jika advertised window bernilai 0 maka pada saat itu buffer di receiver sedang penuh dan tidak dapat untuk menampung data. Oleh karena itu penanganan yang dapat digunakan adalah dengan menunda pengirimannya sampai receiver memberikan advertised window lebih dari 0.
 
 - Sebutkan field data yang terdapat TCP Header serta ukurannya, ilustrasikan, dan jelaskan kegunaan dari masing-masing field data tersebut!
+![TCP Header](https://fthmb.tqn.com/WOQJbiz4RFmjbnILHaOUK2claqo=/768x0/filters:no_upscale()/tcp-header-56a1adc85f9b58b7d0c1a24f.png)
+sumber : https://www.lifewire.com/tcp-headers-and-udp-headers-explained-817970
+    
     Field data yang terdapat pada TCP Header :
     - Source TCP port number (2 bytes) 
-
+        
     - Destination TCP port number (2 bytes)
  
     - Sequence number (4 bytes)
