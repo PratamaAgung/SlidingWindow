@@ -23,7 +23,7 @@ class SendFrame{
 		SendFrame(unsigned char data, unsigned int seqNumber){
 			this->data = data;
 			this->seqNumber = seqNumber;
-			this->checksum = getChecksum();
+			this->checksum = 0;
 		}
 
 		SendFrame(unsigned char* msg){
@@ -47,9 +47,7 @@ class SendFrame{
 		}
 
 		//isError
-		bool isError() {
-			return this->checksum == getChecksum();
-		}
+		bool isError() {return true;}
 
 		//getter
 		int getFrameNumber(){
@@ -65,8 +63,7 @@ class SendFrame{
 		}
 
 		unsigned char getChecksum(){
-			return SOH + (((this->seqNumber) >> 24) & 0xff) + (((this->seqNumber) >> 16) & 0xff) + (((this->seqNumber) >> 8) & 0xff) + 
-			(this->seqNumber & 0xff) + STX + this->data + ETX;
+			return checksum;
 		}
 };
 

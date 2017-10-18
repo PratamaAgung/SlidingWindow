@@ -22,7 +22,7 @@ public:
     FrameAck(unsigned int nextSeqNumber, unsigned char adWindowSize) {
         this->nextSeqNumber = nextSeqNumber;
         this->adWindowSize = adWindowSize;
-        this->checksum = getCheckSum();
+        this->checksum = 0;
     };
 
     FrameAck(unsigned char* msg){
@@ -44,9 +44,7 @@ public:
     }
 
     //isError
-    bool isError() {
-        return this->checksum == getCheckSum();
-    }
+    bool isError() {return true;}
 
     //setter
     void setNextSeqNumber(unsigned int nextSeqNumber) { this->nextSeqNumber = nextSeqNumber;}
@@ -55,10 +53,7 @@ public:
     //getter
     unsigned int getNextSeqNumber() { return nextSeqNumber; }
     unsigned int getAdWindowSize() { return adWindowSize; }
-    unsigned char getCheckSum() { 
-        return ACK + (((this->nextSeqNumber) >> 24) & 0xff) + (((this->nextSeqNumber) >> 16) & 0xff) + (((this->nextSeqNumber) >> 8) & 0xff)
-        + (this->nextSeqNumber & 0xff) + this->adWindowSize; 
-    }
+    unsigned char getCheckSum() { return checksum; }
     unsigned int getFrameNumber(){ return  7;}
 };
 
