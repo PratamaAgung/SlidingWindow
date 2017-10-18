@@ -20,7 +20,11 @@ make run-sendfile
 ### Cara Kerja Sliding Window
 Pada program yang dibuat, terdapat buffer yang akan menyimpan data siap kirim pada sender dan data telah diterima pada receiver. Sliding window diimplementasikan sebagai suatu interval pada buffer yang dibatasi oleh dua integer sebagai indeks, yaitu `lowerWindow` dan `upperWindow`. Selain itu, untuk mengontrol status terkirim tidaknya suatu paket data, digunakan suatu kelas bernama `WindowStatus`. Pada kelas ini terdapat data status terkirimnya paket (telah terkirim atau belum terkirim) dan waktu terakhir paket dikirim. Waktu terakhir ini akan berguna dalam memberikan status timeout pada paket data. Jika paket data telah timeout, maka paket itu akan dikirim kembali. Pada receiver, setiap menerima suatu paket data, maka receiver akan mengembalikan ACK kepada sender. ACK ini berisi sequence number dari data berikutnya yang diharapkan oleh receiver. Sender dan receiver akan menyesuaikan window-nya dengan data yang sedang dipertukarkan. Hal ini akan berlangsung terus hingga frame terakhir dikirim. Saat ACK dari frame terakhir diterima oleh sender, maka sender akan mengirim frame dengan data berisi NULL dan dengan sequence number yang menandakan bahwa proses transmisi data telah selesai.
 Fungsi-fungsi yang terlibat dalam proses transimsi data penggunakan flow control protocol Sliding Window adalah sebagai berikut:
+- `currentDateTime()` berfungsi untuk mengetahui waktu saat pentransferan data ataupun ack
+- `configureSetting()` berfungsi untuk menyetting ip dan juga port socket
+- `createSocket()` berfungsi untuk membuat socket
 - `fillBuffer()` berfungsi sebagai pembaca file kemudian memasukkannya ke dalam vector
+- `sendMessageFrame()` berfungsi untuk mengirimkan frame kepada receiver
 - `sendToBuffer()` berfungsi untuk memindahkan data dalam vektor ke dalam buffer
 - `sendFile()` berfungsi untuk mengirimkan frame-frame yang berada pada buffer
 - `receiveACK()` berfungsi untuk mengelola ack yang masuk pada sender
@@ -43,29 +47,40 @@ Fungsi-fungsi yang terlibat dalam proses transimsi data penggunakan flow control
     Advertised Window adalah jumlah data yang masih dapat ditampung receiver ke dalam buffer. Jika advertised window bernilai 0 maka pada saat itu buffer di receiver sedang penuh dan tidak dapat untuk menampung data. Oleh karena itu penanganan yang dapat digunakan adalah dengan menunda pengirimannya sampai receiver memberikan advertised window lebih dari 0.
 
 - Sebutkan field data yang terdapat TCP Header serta ukurannya, ilustrasikan, dan jelaskan kegunaan dari masing-masing field data tersebut!
-![TCP Header](tcp_header.png)
+![TCP Header](tcp-header.png)
 
 sumber gambar: https://www.lifewire.com/tcp-headers-and-udp-headers-explained-817970
     
     Field data yang terdapat pada TCP Header :
     - Source TCP port number (2 bytes) 
-        
+      	Mengidentifikasi port sender
+
     - Destination TCP port number (2 bytes)
+    	Mengidentifikasi port receiver
  
     - Sequence number (4 bytes)
+    	Dapat mengidentifikasi urutan data
  
     - Acknowledgment number (4 bytes)
+    	Dapat mengidentidikasi sequence number dengan adanya komunikasi menggunakan ack
  
     - TCP data offset (4 bits)
+    	Menyimpan total size dari TCP header
  
     - Reserved data (3 bits)
+    	Mempunyai nilai 0
  
     - Control flags (up to 9 bits)
+    	Terdiri dari 9 flag, yaitu NS, CWR, ECE, URG, ACK, PSH, RST, SYN, dan FIN
  
     - Window size (2 bytes)
- 
+ 		Ukuran dari window size yang dapat diterima
+
     - TCP checksum (2 bytes)
+    	Untuk pengecekan error dari data yang dikirim
  
     - Urgent pointer (2 bytes)
+    	Biasanya di set 0 dan diabaikan, tetapi dapat digunakan untuk menandakan data yang butuh memproses dengan prioritas
  
     - TCP optional data (0-40 bytes)
+    	Dapat mensupport ack spesial dan algoritma window scaling
