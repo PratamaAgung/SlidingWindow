@@ -2,6 +2,7 @@
 #define __SENDFRAME__
 
 #include <bits/stdc++.h>
+#include "crc.h"
 
 #define SOH 0x1
 #define STX 0x2

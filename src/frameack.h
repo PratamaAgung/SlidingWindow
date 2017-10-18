@@ -2,6 +2,7 @@
 #define _FRAMEACK_
 
 #include <bits/stdc++.h>
+#include "crc.h"
 
 #define ACK 0x6
 
