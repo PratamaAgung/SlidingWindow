@@ -21,7 +21,14 @@ make run-sendfile
 Pada program yang dibuat, terdapat buffer yang akan menyimpan data siap kirim pada sender dan data telah diterima pada receiver. Sliding window diimplementasikan sebagai suatu interval pada buffer yang dibatasi oleh dua integer sebagai indeks, yaitu `lowerWindow` dan `upperWindow`. Selain itu, untuk mengontrol status terkirim tidaknya suatu paket data, digunakan suatu kelas bernama `WindowStatus`. Pada kelas ini terdapat data status terkirimnya paket (telah terkirim atau belum terkirim) dan waktu terakhir paket dikirim. Waktu terakhir ini akan berguna dalam memberikan status timeout pada paket data. Jika paket data telah timeout, maka paket itu akan dikirim kembali. Pada receiver, setiap menerima suatu paket data, maka receiver akan mengembalikan ACK kepada sender. ACK ini berisi sequence number dari data berikutnya yang diharapkan oleh receiver. Sender dan receiver akan menyesuaikan window-nya dengan data yang sedang dipertukarkan. Hal ini akan berlangsung terus hingga frame terakhir dikirim. Saat ACK dari frame terakhir diterima oleh sender, maka sender akan mengirim frame dengan data berisi NULL dan dengan sequence number yang menandakan bahwa proses transmisi data telah selesai.
 Fungsi-fungsi yang terlibat dalam proses transimsi data penggunakan flow control protocol Sliding Window adalah sebagai berikut:
 - `fillBuffer()` berfungsi sebagai pembaca file kemudian memasukkannya ke dalam vector
-- `sendToBuffer()`
+- `sendToBuffer()` berfungsi untuk memindahkan data dalam vektor ke dalam buffer
+- `sendFile()` berfungsi untuk mengirimkan frame-frame yang berada pada buffer
+- `receiveACK()` berfungsi untuk mengelola ack yang masuk pada sender
+- `timeOutManager()` 
+- `sendACK()`
+- `processMsg()`
+- `waitForMsg()`
+- `printRecvMsg()`
 - 
 ### Pembagian Tugas
 | Nama | NIM | Tugas  | 
@@ -32,7 +39,7 @@ Fungsi-fungsi yang terlibat dalam proses transimsi data penggunakan flow control
 
 ### Jawaban Pertanyaan
 - Apa yang terjadi jika advertised window yang dikirim bernilai 0? Apa cara untuk menangani hal tersebut?
- 
+    Jika advertised window bernilai 0 maka pada buffer receiver akan selalu penuh dan tidak terjadi pertukaran data.??
 
 - Sebutkan field data yang terdapat TCP Header serta ukurannya, ilustrasikan, dan jelaskan kegunaan dari masing-masing field data tersebut!
     Field data yang terdapat pada TCP Header :
