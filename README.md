@@ -53,34 +53,34 @@ sumber gambar: https://www.lifewire.com/tcp-headers-and-udp-headers-explained-81
     
     Field data yang terdapat pada TCP Header :
     - Source TCP port number (2 bytes) 
-      	Mengidentifikasi port sender
+    Mengidentifikasi port sender
 
     - Destination TCP port number (2 bytes)
-    	Mengidentifikasi port receiver
+    Mengidentifikasi port receiver
  
     - Sequence number (4 bytes)
-    	Dapat mengidentifikasi urutan data
+    Dapat mengidentifikasi urutan data
  
     - Acknowledgment number (4 bytes)
-    	Dapat mengidentidikasi sequence number dengan adanya komunikasi menggunakan ack
+    Dapat mengidentidikasi sequence number dengan adanya komunikasi menggunakan ack
  
     - TCP data offset (4 bits)
-    	Menyimpan total size dari TCP header
+    Menyimpan total size dari TCP header
  
     - Reserved data (3 bits)
-    	Mempunyai nilai 0
+    Mempunyai nilai 0
  
     - Control flags (up to 9 bits)
-    	Terdiri dari 9 flag, yaitu NS, CWR, ECE, URG, ACK, PSH, RST, SYN, dan FIN
+    Terdiri dari 9 flag, yaitu NS, CWR, ECE, URG, ACK, PSH, RST, SYN, dan FIN
  
     - Window size (2 bytes)
- 		Ukuran dari window size yang dapat diterima
+ 	Ukuran dari window size yang dapat diterima
 
     - TCP checksum (2 bytes)
-    	Untuk pengecekan error dari data yang dikirim
+    Untuk pengecekan error dari data yang dikirim
  
     - Urgent pointer (2 bytes)
-    	Biasanya di set 0 dan diabaikan, tetapi dapat digunakan untuk menandakan data yang butuh memproses dengan prioritas
+    Biasanya di set 0 dan diabaikan, tetapi dapat digunakan untuk menandakan data yang butuh memproses dengan prioritas
  
     - TCP optional data (0-40 bytes)
-    	Dapat mensupport ack spesial dan algoritma window scaling
+    Dapat mensupport ack spesial dan algoritma window scaling
