@@ -31,5 +31,29 @@ Fungsi-fungsi yang terlibat dalam proses transimsi data penggunakan flow control
 | Muhamad Irfan M . |  13515037 | Fungsi create socket, fungsi pengelolaan buffer pada sender  |
 
 ### Jawaban Pertanyaan
-- Apakah yang akan terjadi jika advertised window size bernilai 0?
-- Field data yang  terdapat pada TCP header adalah sebagai berikut
+- Apa yang terjadi jika advertised window yang dikirim bernilai 0? Apa cara untuk menangani hal tersebut?
+ 
+
+- Sebutkan field data yang terdapat TCP Header serta ukurannya, ilustrasikan, dan jelaskan kegunaan dari masing-masing field data tersebut!
+    Field data yang terdapat pada TCP Header :
+    - Source TCP port number (2 bytes) 
+
+    - Destination TCP port number (2 bytes)
+ 
+    - Sequence number (4 bytes)
+ 
+    - Acknowledgment number (4 bytes)
+ 
+    - TCP data offset (4 bits)
+ 
+    - Reserved data (3 bits)
+ 
+    - Control flags (up to 9 bits)
+ 
+    - Window size (2 bytes)
+ 
+    - TCP checksum (2 bytes)
+ 
+    - Urgent pointer (2 bytes)
+ 
+    - TCP optional data (0-40 bytes)
