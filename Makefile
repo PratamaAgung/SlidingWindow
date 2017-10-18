@@ -5,7 +5,7 @@ build: sendfile.cpp receiver.cpp
 	g++ receiver.cpp -o bin/receiver -std=c++11 -lpthread
 
 run-sendfile:
-	./bin/sendfile message.txt 5 100 10.5.25.66 9876
+	./bin/sendfile message.txt 5 100 127.0.0.1 9876
 
 run-receiver:
 	./bin/receiver
